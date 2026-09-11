@@ -1,0 +1,12 @@
+{
+  "name": "elvis-karina",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix web",
+    "build": "npm run build --prefix web",
+    "dev": "npm run dev --prefix web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
