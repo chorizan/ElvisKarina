@@ -6,11 +6,13 @@ import { Badge, presupuestoEstadoBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input, Label, Textarea } from '@/components/ui/input'
-import { clinica, getPaciente, getPresupuesto } from '@/lib/mock-data'
+import { getPaciente, getPresupuesto } from '@/lib/mock-data'
 import { formatDate } from '@/lib/utils'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 export function BudgetDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const clinica = useSettingsStore((s) => s.clinica)
   const presupuesto = getPresupuesto(id ?? '')
   const paciente = presupuesto ? getPaciente(presupuesto.pacienteId) : null
 

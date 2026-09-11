@@ -15,7 +15,8 @@ import {
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { clinica, usuarioActual } from '@/lib/mock-data'
+import { usuarioActual } from '@/lib/mock-data'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 const navSections = [
   {
@@ -54,6 +55,8 @@ const navSections = [
 ]
 
 export function Sidebar() {
+  const clinica = useSettingsStore((s) => s.clinica)
+
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-card">
       <div className="border-b border-border p-5">

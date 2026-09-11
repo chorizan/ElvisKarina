@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input, Label } from '@/components/ui/input'
-import { clinica } from '@/lib/mock-data'
 import { useAuthStore } from '@/stores/uiStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+  const clinica = useSettingsStore((s) => s.clinica)
   const [email, setEmail] = useState('juan.perez@sonrisa.pe')
   const [password, setPassword] = useState('demo123')
 
