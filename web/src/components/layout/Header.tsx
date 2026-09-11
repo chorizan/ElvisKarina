@@ -2,7 +2,8 @@ import { Bell, Menu, Moon, Plus, Search, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { clinica, usuarioActual } from '@/lib/mock-data'
+import { usuarioActual } from '@/lib/mock-data'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { useUIStore } from '@/stores/uiStore'
 
 interface HeaderProps {
@@ -13,6 +14,7 @@ interface HeaderProps {
 export function Header({ title, onSearchOpen }: HeaderProps) {
   const navigate = useNavigate()
   const { toggleSidebar, darkMode, toggleDarkMode } = useUIStore()
+  const clinica = useSettingsStore((s) => s.clinica)
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">

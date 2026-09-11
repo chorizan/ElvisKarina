@@ -1,13 +1,37 @@
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input, Label } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { clinica } from '@/lib/mock-data'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { useUIStore } from '@/stores/uiStore'
 
 export function SettingsPage() {
   const { darkMode, toggleDarkMode } = useUIStore()
+  const { clinica, updateClinica } = useSettingsStore()
+
+  const [nombre, setNombre] = useState(clinica.nombre)
+  const [direccion, setDireccion] = useState(clinica.direccion)
+  const [telefono, setTelefono] = useState(clinica.telefono)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setNombre(clinica.nombre)
+    setDireccion(clinica.direccion)
+    setTelefono(clinica.telefono)
+  }, [clinica])
+
+  const handleSave = () => {
+    updateClinica({ nombre, direccion, telefono })
+    setSaved(true)
+    window.setTimeout(() => setSaved(false), 3000)
+  }
+
+  const hasChanges =
+    nombre !== clinica.nombre ||
+    direccion !== clinica.direccion ||
+    telefono !== clinica.telefono
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -31,18 +55,37 @@ export function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Nombre</Label>
-                <Input defaultValue={clinica.nombre} />
+                <Label htmlFor="clinica-nombre">Nombre</Label>
+                <Input
+                  id="clinica-nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                />
               </div>
               <div>
-                <Label>Dirección</Label>
-                <Input defaultValue={clinica.direccion} />
+                <Label htmlFor="clinica-direccion">Dirección</Label>
+                <Input
+                  id="clinica-direccion"
+                  value={direccion}
+                  onChange={(e) => setDireccion(e.target.value)}
+                />
               </div>
               <div>
-                <Label>Teléfono</Label>
-                <Input defaultValue={clinica.telefono} />
+                <Label htmlFor="clinica-telefono">Teléfono</Label>
+                <Input
+                  id="clinica-telefono"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                />
               </div>
-              <Button>Guardar cambios</Button>
+              <div className="flex items-center gap-3">
+                <Button onClick={handleSave} disabled={!hasChanges}>
+                  Guardar cambios
+                </Button>
+                {saved && (
+                  <p className="text-sm font-medium text-emerald-600">Cambios guardados</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
