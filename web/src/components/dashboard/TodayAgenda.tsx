@@ -1,10 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { citas, getPaciente } from '@/lib/mock-data'
+import { getPaciente } from '@/lib/mock-data'
+import { useCitasStore } from '@/stores/citasStore'
 import { formatDate } from '@/lib/utils'
 
 export function TodayAgenda() {
+  const citas = useCitasStore((s) => s.citas)
   const today = new Date()
   const todayCitas = citas
+    .filter((c) => c.estado !== 'cancelada')
     .filter((c) => {
       const d = new Date(c.fechaInicio)
       return d.toDateString() === today.toDateString()

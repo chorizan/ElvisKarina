@@ -26,6 +26,8 @@ export function OdontogramPage() {
     setOdontograma,
     addOdontogramaEntry,
     removeOdontogramaEntry,
+    removeTratamiento,
+    seeded,
   } = useConsultaStore()
 
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
@@ -36,10 +38,10 @@ export function OdontogramPage() {
   const [presentMode, setPresentMode] = useState(false)
 
   useEffect(() => {
-    if (odontograma.length === 0 && consulta.odontograma.length > 0) {
+    if (!seeded && odontograma.length === 0 && consulta.odontograma.length > 0) {
       setOdontograma(consulta.odontograma)
     }
-  }, [consulta.odontograma, odontograma.length, setOdontograma])
+  }, [consulta.odontograma, odontograma.length, seeded, setOdontograma])
 
   const handleAdd = () => {
     if (!selectedTooth || !diagnostico) return
@@ -98,9 +100,9 @@ export function OdontogramPage() {
         {/* Área principal a pantalla completa */}
         <div className="flex min-h-0 flex-1">
           {/* Panel izquierdo */}
-          <aside className="hidden w-56 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border bg-muted/20 p-3 xl:flex xl:w-64">
+          <aside className="hidden w-64 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border bg-muted/20 p-3 xl:flex xl:w-72">
             <DiagnosticCatalog entries={odontograma} onRemove={removeOdontogramaEntry} />
-            <ProcedureCatalog entries={odontograma} onRemove={removeOdontogramaEntry} />
+            <ProcedureCatalog entries={odontograma} onRemove={removeTratamiento} />
             {presupuestoLineas.length > 0 && (
               <div className="rounded-lg border border-border bg-card p-3 text-sm">
                 <p className="font-medium">Presupuesto vinculado</p>

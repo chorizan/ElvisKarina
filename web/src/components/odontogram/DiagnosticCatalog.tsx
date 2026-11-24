@@ -15,10 +15,10 @@ export function DiagnosticCatalog({ entries, onRemove }: DiagnosticCatalogProps)
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Catálogo Diagnósticos</CardTitle>
+      <CardHeader className="p-3 pb-2">
+        <CardTitle className="text-sm">Diagnósticos</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0">
         {diagnosticos.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin diagnósticos registrados.</p>
         ) : (
@@ -44,7 +44,7 @@ export function DiagnosticCatalog({ entries, onRemove }: DiagnosticCatalogProps)
                     <p className="text-xs text-muted-foreground">{e.observacion}</p>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onRemove(e.id)}>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" title="Quitar diagnóstico" onClick={() => onRemove(e.id)}>
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </div>
@@ -61,10 +61,10 @@ export function ProcedureCatalog({ entries, onRemove }: DiagnosticCatalogProps) 
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Catálogo Procedimientos</CardTitle>
+      <CardHeader className="p-3 pb-2">
+        <CardTitle className="text-sm">Procedimientos</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0">
         {procedimientos.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin procedimientos registrados.</p>
         ) : (
@@ -72,20 +72,25 @@ export function ProcedureCatalog({ entries, onRemove }: DiagnosticCatalogProps) 
             {procedimientos.map((e) => (
               <div
                 key={e.id}
-                className="flex items-center justify-between rounded-lg border border-border p-2 text-sm"
+                className="flex items-center justify-between gap-2 rounded-lg border border-border p-2 text-sm"
               >
-                <div>
-                  <p className="font-medium capitalize">{e.tratamiento?.replace('_', ' ')}</p>
-                  <p className="text-xs text-muted-foreground">Pieza #{e.pieza}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium capitalize">{e.tratamiento?.replace('_', ' ')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Pieza #{e.pieza} ·{' '}
+                    <span className="font-semibold text-primary">{formatCurrency(e.precio ?? 0)}</span>
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-primary">
-                    {formatCurrency(e.precio ?? 0)}
-                  </span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onRemove(e.id)}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  title="Quitar procedimiento"
+                  onClick={() => onRemove(e.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
               </div>
             ))}
           </div>

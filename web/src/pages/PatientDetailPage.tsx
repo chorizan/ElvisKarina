@@ -9,8 +9,8 @@ import {
   getConsultasPaciente,
   getPaciente,
   getPresupuestosPaciente,
-  getCitasPaciente,
 } from '@/lib/mock-data'
+import { useCitasStore } from '@/stores/citasStore'
 import { calcAge, formatCurrency, formatDate } from '@/lib/utils'
 
 export function PatientDetailPage() {
@@ -18,7 +18,8 @@ export function PatientDetailPage() {
   const paciente = getPaciente(id ?? '')
   const consultas = getConsultasPaciente(id ?? '')
   const presupuestos = getPresupuestosPaciente(id ?? '')
-  const citas = getCitasPaciente(id ?? '')
+  const todasCitas = useCitasStore((s) => s.citas)
+  const citas = todasCitas.filter((c) => c.pacienteId === id && c.estado !== 'cancelada')
 
   if (!paciente) {
     return <p>Paciente no encontrado.</p>

@@ -10,6 +10,8 @@ interface ConsultaState {
   setOdontograma: (entries: OdontogramaEntrada[]) => void
   addOdontogramaEntry: (entry: OdontogramaEntrada) => void
   removeOdontogramaEntry: (id: string) => void
+  removeTratamiento: (id: string) => void
+  seeded: boolean
   syncPresupuestoFromOdontograma: () => void
   setPresupuestoLineas: (lineas: PresupuestoDetalle[]) => void
   setLastAction: (action: string) => void
@@ -35,8 +37,9 @@ export const useConsultaStore = create<ConsultaState>((set, get) => ({
   odontograma: [],
   presupuestoLineas: [],
   lastAction: '',
+  seeded: false,
   setOdontograma: (entries) => {
-    set({ odontograma: entries })
+    set({ odontograma: entries, seeded: true })
     get().syncPresupuestoFromOdontograma()
   },
   addOdontogramaEntry: (entry) => {
@@ -54,6 +57,14 @@ export const useConsultaStore = create<ConsultaState>((set, get) => ({
     set({ odontograma: get().odontograma.filter((e) => e.id !== id) })
     get().syncPresupuestoFromOdontograma()
   },
+  removeTratamiento: (id) => {
+    set({
+      odontograma: get().odontograma.map((e) =>
+        e.id === id ? { ...e, tratamiento: undefined, precio: undefined, enTratamiento: false } : e,
+      ),
+    })
+    get().syncPresupuestoFromOdontograma()
+  },
   syncPresupuestoFromOdontograma: () => {
     const lineas = get()
       .odontograma.map(entryToLinea)
@@ -63,5 +74,5 @@ export const useConsultaStore = create<ConsultaState>((set, get) => ({
   setPresupuestoLineas: (lineas) => set({ presupuestoLineas: lineas }),
   setLastAction: (action) => set({ lastAction: action }),
   reset: () =>
-    set({ odontograma: [], presupuestoLineas: [], lastAction: '' }),
+    set({ odontograma: [], presupuestoLineas: [], lastAction: '', seeded: false }),
 }))
