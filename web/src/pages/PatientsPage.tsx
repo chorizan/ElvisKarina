@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Plus, Search } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,14 +12,17 @@ import { useState, type FormEvent } from 'react'
 
 export function PatientsPage() {
   const pacientes = usePacientesStore((s) => s.pacientes)
-  const [search, setSearch] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const search = searchParams.get('q') ?? ''
+  const setSearch = (q: string) => setSearchParams(q ? { q } : {}, { replace: true })
   const [open, setOpen] = useState(false)
 
+  const term = search.trim().toLowerCase()
   const filtered = pacientes.filter(
     (p) =>
-      `${p.nombres} ${p.apellidos}`.toLowerCase().includes(search.toLowerCase()) ||
-      p.dni?.includes(search) ||
-      p.codigo.toLowerCase().includes(search.toLowerCase()),
+      `${p.nombres} ${p.apellidos}`.toLowerCase().includes(term) ||
+      p.dni?.includes(term) ||
+      p.codigo.toLowerCase().includes(term),
   )
 
   return (
@@ -60,6 +63,13 @@ export function PatientsPage() {
                 </tr>
               </thead>
               <tbody>
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                      No se encontraron pacientes{search && ` para “${search}”`}.
+                    </td>
+                  </tr>
+                )}
                 {filtered.map((p) => (
                   <tr key={p.id} className="border-b border-border hover:bg-muted/30">
                     <td className="px-4 py-3">
@@ -121,6 +131,7 @@ function NuevoPacienteDialog({
   onOpenChange: (o: boolean) => void
 }) {
   const addPaciente = usePacientesStore((s) => s.addPaciente)
+  const pacientes = usePacientesStore((s) => s.pacientes)
   const [f, setF] = useState(vacio)
   const [error, setError] = useState('')
   const set = (k: keyof typeof vacio) => (e: { target: { value: string } }) =>
@@ -144,9 +155,17 @@ function NuevoPacienteDialog({
       setError('El DNI debe tener 8 dígitos.')
       return
     }
+    if (f.dni && pacientes.some((p) => p.dni === f.dni)) {
+      setError('Ya existe un paciente registrado con ese DNI.')
+      return
+    }
+    if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) {
+      setError('El email no es válido.')
+      return
+    }
     const clean = Object.fromEntries(
       Object.entries(f).map(([k, v]) => [k, v.trim() || undefined]),
-    ) as Omit<typeof vacio, never>
+    ) as Partial<Record<keyof typeof vacio, string>>
     addPaciente({ ...clean, nombres: f.nombres.trim(), apellidos: f.apellidos.trim() })
     cerrar(false)
   }

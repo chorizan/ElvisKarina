@@ -34,3 +34,13 @@ export function calcAge(birthDate: string) {
 export function delay(ms = 300) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
+
+/** Inicial del nombre sin el título (Dr., Dra.) */
+export function inicialUsuario(nombre: string) {
+  return nombre.replace(/^(dr|dra)\.?\s+/i, '').charAt(0).toUpperCase()
+}
+
+/** Fecha local en formato YYYY-MM-DD (para inputs type="date") */
+export function toDateInput(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}

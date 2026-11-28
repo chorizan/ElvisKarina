@@ -1,7 +1,9 @@
 import type * as React from 'react'
 import { cn } from '@/lib/utils'
 
-const variants: Record<string, string> = {
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
+
+const variants: Record<BadgeVariant, string> = {
   default: 'bg-secondary text-secondary-foreground',
   success: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
@@ -10,7 +12,7 @@ const variants: Record<string, string> = {
 }
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: keyof typeof variants
+  variant?: BadgeVariant
 }
 
 export function Badge({ className, variant = 'default', ...props }: BadgeProps) {
@@ -24,22 +26,4 @@ export function Badge({ className, variant = 'default', ...props }: BadgeProps) 
       {...props}
     />
   )
-}
-
-export const citaEstadoBadge: Record<string, { label: string; variant: BadgeProps['variant'] }> = {
-  programada: { label: 'Programada', variant: 'default' },
-  confirmada: { label: 'Confirmada', variant: 'info' },
-  en_espera: { label: 'En espera', variant: 'warning' },
-  atendida: { label: 'Atendida', variant: 'success' },
-  cancelada: { label: 'Cancelada', variant: 'danger' },
-  no_asistio: { label: 'No asistió', variant: 'warning' },
-  reprogramada: { label: 'Reprogramada', variant: 'info' },
-}
-
-export const presupuestoEstadoBadge: Record<string, { label: string; variant: BadgeProps['variant'] }> = {
-  borrador: { label: 'Borrador', variant: 'default' },
-  enviado: { label: 'Enviado', variant: 'info' },
-  aceptado: { label: 'Aceptado', variant: 'success' },
-  rechazado: { label: 'Rechazado', variant: 'danger' },
-  vencido: { label: 'Vencido', variant: 'warning' },
 }

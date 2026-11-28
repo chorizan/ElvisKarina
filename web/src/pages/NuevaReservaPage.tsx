@@ -1,21 +1,25 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input, Label, Select } from '@/components/ui/input'
+import { validarHorarioCita } from '@/lib/agenda'
 import { usuarioActual } from '@/lib/mock-data'
+import { toDateInput } from '@/lib/utils'
 import { usePacientesStore } from '@/stores/pacientesStore'
 import { useCitasStore } from '@/stores/citasStore'
 
 export function NuevaReservaPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const citas = useCitasStore((s) => s.citas)
   const pacientes = usePacientesStore((s) => s.pacientes)
   const addCita = useCitasStore((s) => s.addCita)
-  const [pacienteId, setPacienteId] = useState('')
+  const [pacienteId, setPacienteId] = useState(searchParams.get('paciente') ?? '')
   const [consultorio, setConsultorio] = useState('Consultorio 1')
-  const [fecha, setFecha] = useState('')
-  const [hora, setHora] = useState('')
+  const [fecha, setFecha] = useState(searchParams.get('fecha') ?? '')
+  const [hora, setHora] = useState(searchParams.get('hora') ?? '')
   const [duracion, setDuracion] = useState('60')
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState('')
@@ -27,6 +31,11 @@ export function NuevaReservaPage() {
     }
     const inicio = new Date(`${fecha}T${hora}`)
     const fin = new Date(inicio.getTime() + Number(duracion) * 60000)
+    const err = validarHorarioCita(citas, { inicio, fin, consultorio })
+    if (err) {
+      setError(err)
+      return
+    }
     addCita({
       pacienteId,
       odontologoId: usuarioActual.id,
@@ -74,11 +83,11 @@ export function NuevaReservaPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Fecha</Label>
-              <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+              <Input type="date" min={toDateInput(new Date())} value={fecha} onChange={(e) => setFecha(e.target.value)} />
             </div>
             <div>
               <Label>Hora</Label>
-              <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+              <Input type="time" min="08:00" max="19:30" step={900} value={hora} onChange={(e) => setHora(e.target.value)} />
             </div>
           </div>
           <div>

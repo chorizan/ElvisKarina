@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,11 +13,14 @@ export function LoginPage() {
   const clinica = useSettingsStore((s) => s.clinica)
   const [email, setEmail] = useState('juan.perez@sonrisa.pe')
   const [password, setPassword] = useState('demo123')
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (login(email, password)) {
-      navigate('/dashboard')
+      navigate('/dashboard', { replace: true })
+    } else {
+      setError('Ingresa tu email y contraseña.')
     }
   }
 
@@ -56,6 +59,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full">
                 Iniciar sesión
               </Button>

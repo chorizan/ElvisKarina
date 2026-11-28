@@ -1,10 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getPaciente } from '@/lib/mock-data'
+import { Link } from 'react-router-dom'
 import { useCitasStore } from '@/stores/citasStore'
+import { usePacientesStore } from '@/stores/pacientesStore'
 import { formatDate } from '@/lib/utils'
 
 export function TodayAgenda() {
   const citas = useCitasStore((s) => s.citas)
+  usePacientesStore((s) => s.pacientes)
   const today = new Date()
   const todayCitas = citas
     .filter((c) => c.estado !== 'cancelada')
@@ -28,11 +31,13 @@ export function TodayAgenda() {
             const hora = new Date(cita.fechaInicio).toLocaleTimeString('es-PE', {
               hour: '2-digit',
               minute: '2-digit',
+              hour12: false,
             })
             return (
-              <div
+              <Link
                 key={cita.id}
-                className="flex items-start gap-3 rounded-lg border border-border p-3"
+                to="/agenda"
+                className="flex items-start gap-3 rounded-lg border border-border p-3 transition hover:bg-muted"
               >
                 <span className="text-sm font-semibold text-primary">{hora}</span>
                 <div>
@@ -41,7 +46,7 @@ export function TodayAgenda() {
                   </p>
                   <p className="text-sm text-muted-foreground">{cita.tratamiento}</p>
                 </div>
-              </div>
+              </Link>
             )
           })
         )}

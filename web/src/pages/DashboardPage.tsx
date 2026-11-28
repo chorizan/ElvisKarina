@@ -1,35 +1,70 @@
 import { motion } from 'framer-motion'
 import { AlertTriangle } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PopularTreatments } from '@/components/dashboard/PopularTreatments'
 import { RevenueChart } from '@/components/dashboard/RevenueChart'
 import { StatCard, StatCardCurrency } from '@/components/dashboard/StatCard'
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { dashboardStats } from '@/lib/mock-data'
+import { dashboardStats, presupuestos, usuarioActual } from '@/lib/mock-data'
 import { formatDate } from '@/lib/utils'
+import { useCitasStore } from '@/stores/citasStore'
+import { useConsultasStore } from '@/stores/consultasStore'
+import { usePacientesStore } from '@/stores/pacientesStore'
+
+function saludo(hora: number) {
+  if (hora < 12) return 'Buenos días'
+  if (hora < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
+const mismoDia = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 
 export function DashboardPage() {
-  const today = formatDate(new Date())
+  const now = new Date()
+  const manana = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+  const citas = useCitasStore((s) => s.citas)
+  const pacientes = usePacientesStore((s) => s.pacientes)
+  const consultas = useConsultasStore((s) => s.consultas)
+
+  const activas = citas.filter((c) => c.estado !== 'cancelada')
+  const citasHoy = activas.filter((c) => mismoDia(new Date(c.fechaInicio), now))
+  const citasPendientes = activas.filter(
+    (c) => new Date(c.fechaInicio) > now && c.estado !== 'atendida' && c.estado !== 'no_asistio',
+  )
+  const sinConfirmarManana = activas.filter(
+    (c) => mismoDia(new Date(c.fechaInicio), manana) && c.estado === 'programada',
+  )
+  const presupuestosPendientes = presupuestos.filter(
+    (p) => p.estado === 'borrador' || p.estado === 'enviado',
+  )
+  const presupuestosAceptados = presupuestos.filter((p) => p.estado === 'aceptado')
+  const tratamientosEnCurso = consultas.flatMap((c) => c.odontograma).filter((o) => o.enTratamiento)
+
+  const alergiasHoy = citasHoy
+    .map((c) => ({ cita: c, paciente: pacientes.find((p) => p.id === c.pacienteId) }))
+    .filter((x) => x.paciente?.alergias)
+
+  const nombre = usuarioActual.nombre.split(' ').slice(0, 2).join(' ')
+  const hora = (iso: string) =>
+    new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false })
+
+  const sinAlertas =
+    presupuestosPendientes.length === 0 && sinConfirmarManana.length === 0 && alergiasHoy.length === 0
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Buenos días, Dr. Juan</h2>
-        <p className="text-muted-foreground">{today}</p>
+        <h2 className="text-2xl font-bold">
+          {saludo(now.getHours())}, {nombre}
+        </h2>
+        <p className="text-muted-foreground">{formatDate(now)}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Citas de hoy" value={dashboardStats.citasHoy} />
-        <StatCard
-          title="Pacientes atendidos (mes)"
-          value={dashboardStats.pacientesAtendidos}
-          trend={dashboardStats.pacientesAtendidosTrend}
-        />
-        <StatCard title="Citas pendientes" value={dashboardStats.citasPendientes} />
+        <StatCard title="Citas de hoy" value={citasHoy.length} />
+        <StatCard title="Pacientes registrados" value={pacientes.length} />
+        <StatCard title="Citas pendientes" value={citasPendientes.length} />
         <StatCardCurrency
           title="Ingresos del mes"
           value={dashboardStats.ingresosMes}
@@ -38,9 +73,9 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard title="Presupuestos emitidos" value={dashboardStats.presupuestosEmitidos} />
-        <StatCard title="Presupuestos aceptados" value={dashboardStats.presupuestosAceptados} />
-        <StatCard title="Tratamientos en curso" value={dashboardStats.tratamientosEnCurso} />
+        <StatCard title="Presupuestos emitidos" value={presupuestos.length} />
+        <StatCard title="Presupuestos aceptados" value={presupuestosAceptados.length} />
+        <StatCard title="Tratamientos en curso" value={tratamientosEnCurso.length} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -58,15 +93,35 @@ export function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-900/20">
-              3 presupuestos sin respuesta (vencen esta semana)
-            </div>
-            <div className="rounded-lg border border-border p-3 text-sm">
-              2 citas sin confirmar para mañana
-            </div>
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm dark:border-red-900 dark:bg-red-900/20">
-              Paciente Juan Pérez — alergia a Penicilina (cita hoy 09:00)
-            </div>
+            {sinAlertas && (
+              <p className="text-sm text-muted-foreground">No hay alertas pendientes.</p>
+            )}
+            {presupuestosPendientes.length > 0 && (
+              <Link
+                to="/presupuestos"
+                className="block rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm hover:underline dark:border-amber-900 dark:bg-amber-900/20"
+              >
+                {presupuestosPendientes.length} presupuesto(s) sin respuesta del paciente
+              </Link>
+            )}
+            {sinConfirmarManana.length > 0 && (
+              <Link
+                to="/agenda"
+                className="block rounded-lg border border-border p-3 text-sm hover:underline"
+              >
+                {sinConfirmarManana.length} cita(s) sin confirmar para mañana
+              </Link>
+            )}
+            {alergiasHoy.map(({ cita, paciente }) => (
+              <Link
+                key={cita.id}
+                to={`/pacientes/${paciente!.id}`}
+                className="block rounded-lg border border-red-200 bg-red-50 p-3 text-sm hover:underline dark:border-red-900 dark:bg-red-900/20"
+              >
+                Paciente {paciente!.nombres} {paciente!.apellidos} — alergia a {paciente!.alergias}{' '}
+                (cita hoy {hora(cita.fechaInicio)})
+              </Link>
+            ))}
           </CardContent>
         </Card>
       </div>

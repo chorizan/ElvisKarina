@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
-import { Box, Presentation } from 'lucide-react'
+import { Box, Check, Presentation } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   DiagnosticCatalog,
   ProcedureCatalog,
@@ -10,25 +10,49 @@ import { OdontogramCanvas } from '@/components/odontogram/OdontogramCanvas'
 import { PatientPresentationMode } from '@/components/odontogram/PatientPresentationMode'
 import { ToothDetailPanel } from '@/components/odontogram/ToothDetailPanel'
 import { Button } from '@/components/ui/button'
-import { consultas, getPaciente } from '@/lib/mock-data'
+import { getPaciente, presupuestos } from '@/lib/mock-data'
+import { useConsultasStore } from '@/stores/consultasStore'
 import { TRATAMIENTOS } from '@/lib/tooth-states'
 import type { Prioridad } from '@/types/consultation'
 import type { ToothStateKey } from '@/lib/tooth-states'
 import { useConsultaStore } from '@/stores/consultaStore'
+import { formatDate } from '@/lib/utils'
 
 export function OdontogramPage() {
-  const consulta = consultas[0]
-  const paciente = getPaciente(consulta.pacienteId)
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const consultas = useConsultasStore((s) => s.consultas)
+  const updateConsulta = useConsultasStore((s) => s.updateConsulta)
   const {
+    consultaId,
     odontograma,
     presupuestoLineas,
     lastAction,
-    setOdontograma,
+    dirty,
+    loadConsulta,
     addOdontogramaEntry,
     removeOdontogramaEntry,
     removeTratamiento,
-    seeded,
+    markSaved,
   } = useConsultaStore()
+
+  // Consulta a mostrar: la del parámetro ?consulta=, si no la que ya está cargada, si no la primera.
+  const consulta =
+    consultas.find((c) => c.id === searchParams.get('consulta')) ??
+    consultas.find((c) => c.id === consultaId) ??
+    consultas[0]
+  const paciente = consulta ? getPaciente(consulta.pacienteId) : undefined
+  const presupuesto = consulta ? presupuestos.find((p) => p.consultaId === consulta.id) : undefined
+
+  useEffect(() => {
+    if (consulta && consulta.id !== consultaId) loadConsulta(consulta.id, consulta.odontograma)
+  }, [consulta, consultaId, loadConsulta])
+
+  const handleSave = () => {
+    if (!consulta) return
+    updateConsulta(consulta.id, { odontograma })
+    markSaved()
+  }
 
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
   const [diagnostico, setDiagnostico] = useState('')
@@ -36,12 +60,6 @@ export function OdontogramPage() {
   const [prioridad, setPrioridad] = useState<Prioridad>('media')
   const [observacion, setObservacion] = useState('')
   const [presentMode, setPresentMode] = useState(false)
-
-  useEffect(() => {
-    if (!seeded && odontograma.length === 0 && consulta.odontograma.length > 0) {
-      setOdontograma(consulta.odontograma)
-    }
-  }, [consulta.odontograma, odontograma.length, seeded, setOdontograma])
 
   const handleAdd = () => {
     if (!selectedTooth || !diagnostico) return
@@ -57,9 +75,19 @@ export function OdontogramPage() {
       precio,
     })
     setObservacion('')
+    setTratamiento('')
   }
 
   const total = presupuestoLineas.reduce((s, l) => s + l.subtotal, 0)
+
+  if (!consulta) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+        <p className="text-muted-foreground">No hay consultas registradas todavía.</p>
+        <Button onClick={() => navigate('/consultas/nueva')}>Nueva consulta</Button>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -73,7 +101,7 @@ export function OdontogramPage() {
           <div>
             <h2 className="text-lg font-bold leading-tight">Odontograma clínico</h2>
             <p className="text-sm text-muted-foreground">
-              {paciente?.nombres} {paciente?.apellidos} · Consulta #{consulta.id}
+              {paciente?.nombres} {paciente?.apellidos} · Consulta del {formatDate(consulta.fecha)}
             </p>
           </div>
           <div className="flex gap-2">
@@ -87,7 +115,16 @@ export function OdontogramPage() {
               <Presentation className="h-4 w-4" />
               Presentar al paciente
             </Button>
-            <Button size="sm">Guardar odontograma</Button>
+            <Button size="sm" onClick={handleSave} disabled={!dirty}>
+              {dirty ? (
+                'Guardar odontograma'
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Guardado
+                </>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -108,7 +145,9 @@ export function OdontogramPage() {
                 <p className="font-medium">Presupuesto vinculado</p>
                 <p className="text-muted-foreground">{presupuestoLineas.length} tratamiento(s)</p>
                 <Button variant="ghost" size="sm" className="h-auto p-0 text-primary" asChild>
-                  <Link to="/presupuestos/b1">Ver presupuesto →</Link>
+                  <Link to={presupuesto ? `/presupuestos/${presupuesto.id}` : '/presupuestos'}>
+                    Ver presupuesto →
+                  </Link>
                 </Button>
               </div>
             )}
@@ -146,7 +185,11 @@ export function OdontogramPage() {
       <PatientPresentationMode
         open={presentMode}
         onClose={() => setPresentMode(false)}
-        pacienteNombre={`${paciente?.nombres} ${paciente?.apellidos}`}
+        pacienteNombre={`${paciente?.nombres ?? ''} ${paciente?.apellidos ?? ''}`.trim()}
+        onVerPlan={() => {
+          setPresentMode(false)
+          navigate(presupuesto ? `/presupuestos/${presupuesto.id}` : '/presupuestos')
+        }}
         entries={odontograma}
         total={total}
       />

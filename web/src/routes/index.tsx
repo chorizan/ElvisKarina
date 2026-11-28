@@ -1,21 +1,24 @@
+import { lazy } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/stores/uiStore'
 import { LoginPage } from '@/pages/LoginPage'
-import { DashboardPage } from '@/pages/DashboardPage'
 import { PatientsPage } from '@/pages/PatientsPage'
 import { PatientDetailPage } from '@/pages/PatientDetailPage'
 import { ConsultationsPage } from '@/pages/ConsultationsPage'
-import { ConsultaWizardPage } from '@/pages/ConsultaWizardPage'
-import { OdontogramPage } from '@/pages/OdontogramPage'
-import { Odontogram3DPage } from '@/pages/Odontogram3DPage'
 import { BudgetsPage } from '@/pages/BudgetsPage'
-import { BudgetDetailPage } from '@/pages/BudgetDetailPage'
-import { AgendaPage } from '@/pages/AgendaPage'
 import { NuevaReservaPage } from '@/pages/NuevaReservaPage'
 import { CatalogPage } from '@/pages/CatalogPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
+
+// Páginas pesadas (three.js, FullCalendar, recharts) se cargan bajo demanda
+const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+const ConsultaWizardPage = lazy(() => import('@/pages/ConsultaWizardPage').then((m) => ({ default: m.ConsultaWizardPage })))
+const OdontogramPage = lazy(() => import('@/pages/OdontogramPage').then((m) => ({ default: m.OdontogramPage })))
+const Odontogram3DPage = lazy(() => import('@/pages/Odontogram3DPage').then((m) => ({ default: m.Odontogram3DPage })))
+const BudgetDetailPage = lazy(() => import('@/pages/BudgetDetailPage').then((m) => ({ default: m.BudgetDetailPage })))
+const AgendaPage = lazy(() => import('@/pages/AgendaPage').then((m) => ({ default: m.AgendaPage })))
 
 function ProtectedRoute() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -23,16 +26,21 @@ function ProtectedRoute() {
   return <Outlet />
 }
 
+function LoginRoute() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
+}
+
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<LoginRoute />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="pacientes" element={<PatientsPage />} />
-          <Route path="pacientes/nuevo" element={<PlaceholderPage title="Nuevo paciente" description="Formulario de registro" />} />
+          <Route path="pacientes/nuevo" element={<Navigate to="/pacientes" replace />} />
           <Route path="pacientes/:id" element={<PatientDetailPage />} />
           <Route path="consultas" element={<ConsultationsPage />} />
           <Route path="consultas/nueva" element={<ConsultaWizardPage />} />

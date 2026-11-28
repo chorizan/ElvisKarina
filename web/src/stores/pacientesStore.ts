@@ -17,7 +17,9 @@ export const usePacientesStore = create<PacientesState>()(
     (set, get) => ({
       pacientes: mockPacientes,
       addPaciente: (data) => {
-        const n = get().pacientes.length + 1
+        // Siguiente código correlativo a partir del mayor existente
+        const n =
+          Math.max(0, ...get().pacientes.map((p) => Number(p.codigo.replace(/\D/g, '')) || 0)) + 1
         const paciente: Paciente = {
           ...data,
           id: `p-${Date.now()}`,

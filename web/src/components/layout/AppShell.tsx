@@ -1,3 +1,4 @@
+import { Suspense, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -31,24 +32,55 @@ function getTitle(pathname: string) {
 
 export function AppShell() {
   const location = useLocation()
-  const { sidebarOpen } = useUIStore()
+  const { sidebarOpen, mobileSidebarOpen, setMobileSidebarOpen } = useUIStore()
   const isFullBleed =
     location.pathname === '/odontograma' || location.pathname.startsWith('/odontograma/')
 
+  // Cierra el menú móvil al navegar.
+  useEffect(() => {
+    setMobileSidebarOpen(false)
+  }, [location.pathname, setMobileSidebarOpen])
+
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <div className={cn('hidden lg:block', !sidebarOpen && 'lg:hidden')}>
+    <div className="flex h-screen overflow-hidden bg-background print:h-auto print:overflow-visible">
+      <div className={cn('hidden print:hidden', sidebarOpen && 'lg:block')}>
         <Sidebar />
       </div>
+
+      {/* Menú lateral en móvil */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden print:hidden">
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="relative h-full w-64 shadow-xl">
+            <Sidebar />
+          </div>
+        </div>
+      )}
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header title={getTitle(location.pathname)} />
+        <div className="print:hidden">
+          <Header title={getTitle(location.pathname)} />
+        </div>
         <main
           className={cn(
-            'flex-1',
-            isFullBleed ? 'min-h-0 overflow-hidden' : 'overflow-y-auto p-6',
+            'flex-1 print:overflow-visible print:p-0',
+            isFullBleed ? 'min-h-0 overflow-hidden' : 'overflow-y-auto p-4 sm:p-6',
           )}
         >
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                Cargando…
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

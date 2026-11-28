@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import type { PresupuestoDetalle } from '@/types/budget'
@@ -8,6 +9,7 @@ interface PresupuestoTableProps {
   descuento?: number
   adelanto?: number
   editable?: boolean
+  onDescuentoChange?: (value: number) => void
 }
 
 export function PresupuestoTable({
@@ -15,9 +17,12 @@ export function PresupuestoTable({
   descuento = 0,
   adelanto = 0,
   editable = false,
+  onDescuentoChange,
 }: PresupuestoTableProps) {
+  const [descuentoLocal, setDescuentoLocal] = useState(descuento)
   const subtotal = detalles.reduce((s, d) => s + d.subtotal, 0)
-  const total = subtotal - descuento
+  const descuentoAplicado = editable ? Math.min(Math.max(descuentoLocal, 0), subtotal) : descuento
+  const total = subtotal - descuentoAplicado
   const saldo = total - adelanto
 
   return (
@@ -63,7 +68,24 @@ export function PresupuestoTable({
           {editable && (
             <div className="flex items-center justify-between gap-4 text-sm">
               <span className="text-muted-foreground">Descuento</span>
-              <Input type="number" className="h-8 w-24 text-right" defaultValue={descuento} />
+              <Input
+                type="number"
+                min={0}
+                max={subtotal}
+                className="h-8 w-28 text-right"
+                value={descuentoLocal}
+                onChange={(e) => {
+                  const v = Number(e.target.value) || 0
+                  setDescuentoLocal(v)
+                  onDescuentoChange?.(Math.min(Math.max(v, 0), subtotal))
+                }}
+              />
+            </div>
+          )}
+          {!editable && descuento > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Descuento</span>
+              <span>- {formatCurrency(descuento)}</span>
             </div>
           )}
           <div className="flex justify-between text-lg font-bold">

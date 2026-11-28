@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { cn, inicialUsuario } from '@/lib/utils'
 import { usuarioActual } from '@/lib/mock-data'
 import { useSettingsStore } from '@/stores/settingsStore'
 
@@ -101,10 +101,9 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-border p-4">
-        <p className="mb-2 text-xs text-primary">? Ayuda</p>
-        <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {usuarioActual.nombre.charAt(4)}
+            {inicialUsuario(usuarioActual.nombre)}
           </div>
           <div>
             <p className="text-sm font-medium">{usuarioActual.nombre}</p>

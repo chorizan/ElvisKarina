@@ -1,22 +1,25 @@
 import { motion } from 'framer-motion'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { Badge, presupuestoEstadoBadge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
+import { presupuestoEstadoBadge } from '@/lib/estados'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  getConsultasPaciente,
-  getPaciente,
-  getPresupuestosPaciente,
-} from '@/lib/mock-data'
+import { getPaciente, getPresupuestosPaciente } from '@/lib/mock-data'
+import { useConsultasStore } from '@/stores/consultasStore'
+import { usePacientesStore } from '@/stores/pacientesStore'
 import { useCitasStore } from '@/stores/citasStore'
 import { calcAge, formatCurrency, formatDate } from '@/lib/utils'
 
 export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>()
+  // Suscripción al store para re-renderizar si cambian los pacientes.
+  usePacientesStore((s) => s.pacientes)
   const paciente = getPaciente(id ?? '')
-  const consultas = getConsultasPaciente(id ?? '')
+  const consultas = useConsultasStore((s) => s.consultas)
+    .filter((c) => c.pacienteId === id)
+    .sort((a, b) => b.fecha.localeCompare(a.fecha))
   const presupuestos = getPresupuestosPaciente(id ?? '')
   const todasCitas = useCitasStore((s) => s.citas)
   const citas = todasCitas.filter((c) => c.pacienteId === id && c.estado !== 'cancelada')
@@ -55,7 +58,7 @@ export function PatientDetailPage() {
               {paciente.codigo}
             </p>
             <p className="text-sm text-muted-foreground">
-              {paciente.telefono} · {paciente.email}
+              {[paciente.telefono, paciente.email].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
             </p>
           </div>
         </div>
@@ -129,9 +132,14 @@ export function PatientDetailPage() {
                       <p className="font-medium">{formatDate(c.fecha)}</p>
                       <p className="text-sm text-muted-foreground">{c.motivo}</p>
                     </div>
-                    <Badge variant={c.estado === 'completada' ? 'success' : 'info'}>
-                      {c.estado === 'completada' ? 'Completada' : 'En curso'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={c.estado === 'completada' ? 'success' : 'info'}>
+                        {c.estado === 'completada' ? 'Completada' : 'En curso'}
+                      </Badge>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/odontograma?consulta=${c.id}`}>Odontograma</Link>
+                      </Button>
+                    </div>
                   </div>
                 ))
               )}
@@ -165,6 +173,9 @@ export function PatientDetailPage() {
         <TabsContent value="presupuestos">
           <Card>
             <CardContent className="p-4">
+              {presupuestos.length === 0 && (
+                <p className="text-sm text-muted-foreground">Sin presupuestos.</p>
+              )}
               {presupuestos.map((p) => (
                 <div key={p.id} className="mb-3 flex items-center justify-between rounded-lg border border-border p-3">
                   <div>

@@ -1,12 +1,11 @@
 import { Canvas } from '@react-three/fiber'
 import { DentalMouth3D } from '@/components/odontogram/DentalMouth3D'
 import { getAffectedTeethSummary } from '@/lib/odontogram-utils'
-import { TOOTH_STATES } from '@/lib/tooth-states'
+import { TOOTH_STATES, TRATAMIENTOS } from '@/lib/tooth-states'
 import type { OdontogramaEntrada } from '@/types/consultation'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
-import { TRATAMIENTOS } from '@/lib/tooth-states'
 
 interface PatientPresentationModeProps {
   open: boolean
@@ -14,6 +13,7 @@ interface PatientPresentationModeProps {
   pacienteNombre: string
   entries: OdontogramaEntrada[]
   total: number
+  onVerPlan?: () => void
 }
 
 export function PatientPresentationMode({
@@ -22,6 +22,7 @@ export function PatientPresentationMode({
   pacienteNombre,
   entries,
   total,
+  onVerPlan,
 }: PatientPresentationModeProps) {
   if (!open) return null
 
@@ -37,14 +38,14 @@ export function PatientPresentationMode({
         <p className="text-4xl">🦷</p>
         <h1 className="mt-2 text-3xl font-bold">Tu sonrisa</h1>
         <p className="mt-1 max-w-md text-muted-foreground">
-          Hola {pacienteNombre.split(' ')[0]}, hemos encontrado{' '}
+          Hola {pacienteNombre.split(' ')[0] || 'paciente'}, hemos encontrado{' '}
           <strong>{affected.length}</strong> pieza(s) que requieren atención.
         </p>
       </div>
 
       <div className="relative min-h-0 flex-1 bg-gradient-to-b from-slate-100 to-slate-200">
         <Canvas
-          shadows
+          shadows="percentage"
           dpr={[1, 2]}
           camera={{ position: [0, 1.25, 3.4], fov: 40 }}
           className="h-full w-full"
@@ -87,7 +88,9 @@ export function PatientPresentationMode({
           Inversión estimada: {formatCurrency(total)}
         </p>
 
-        <Button size="lg">Ver plan de tratamiento</Button>
+        <Button size="lg" onClick={onVerPlan ?? onClose}>
+          Ver plan de tratamiento
+        </Button>
       </div>
     </div>
   )

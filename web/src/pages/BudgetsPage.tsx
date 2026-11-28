@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Badge, presupuestoEstadoBadge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
+import { presupuestoEstadoBadge } from '@/lib/estados'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { getPaciente, presupuestos } from '@/lib/mock-data'

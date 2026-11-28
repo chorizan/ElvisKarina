@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input, Label } from '@/components/ui/input'
@@ -16,14 +16,46 @@ export function SettingsPage() {
   const [telefono, setTelefono] = useState(clinica.telefono)
   const [saved, setSaved] = useState(false)
 
-  useEffect(() => {
-    setNombre(clinica.nombre)
-    setDireccion(clinica.direccion)
-    setTelefono(clinica.telefono)
-  }, [clinica])
+  const [backupMsg, setBackupMsg] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // Claves de localStorage donde la app guarda sus datos
+  const BACKUP_KEYS = ['dental-pacientes', 'dental-citas', 'dental-consultas', 'dental-settings', 'dental-ui']
+
+  const exportarBackup = () => {
+    const data: Record<string, unknown> = { version: 1, fecha: new Date().toISOString() }
+    for (const k of BACKUP_KEYS) {
+      const v = localStorage.getItem(k)
+      if (v) data[k] = JSON.parse(v)
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dental-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setBackupMsg('Backup exportado.')
+  }
+
+  const restaurarBackup = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const data = JSON.parse(await file.text()) as Record<string, unknown>
+      const keys = BACKUP_KEYS.filter((k) => k in data)
+      if (keys.length === 0) throw new Error('vacío')
+      if (!window.confirm('Esto reemplazará los datos actuales por los del backup. ¿Continuar?')) return
+      for (const k of keys) localStorage.setItem(k, JSON.stringify(data[k]))
+      window.location.reload()
+    } catch {
+      setBackupMsg('El archivo no es un backup válido.')
+    }
+  }
 
   const handleSave = () => {
-    updateClinica({ nombre, direccion, telefono })
+    updateClinica({ nombre: nombre.trim(), direccion: direccion.trim(), telefono: telefono.trim() })
     setSaved(true)
     window.setTimeout(() => setSaved(false), 3000)
   }
@@ -79,7 +111,7 @@ export function SettingsPage() {
                 />
               </div>
               <div className="flex items-center gap-3">
-                <Button onClick={handleSave} disabled={!hasChanges}>
+                <Button onClick={handleSave} disabled={!hasChanges || !nombre.trim()}>
                   Guardar cambios
                 </Button>
                 {saved && (
@@ -94,7 +126,7 @@ export function SettingsPage() {
           <Card>
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">
-                Gestión de usuarios disponible en fase backend (NestJS + SQLite).
+                Gestión de usuarios disponible cuando se conecte el backend.
               </p>
             </CardContent>
           </Card>
@@ -104,12 +136,25 @@ export function SettingsPage() {
           <Card>
             <CardContent className="space-y-4 p-6">
               <p className="text-sm text-muted-foreground">
-                Exporta e importa backups de la base de datos local.
+                Los datos se guardan en este navegador. Exporta un backup (pacientes, citas,
+                consultas y configuración) para no perderlos o llevarlos a otro equipo.
               </p>
               <div className="flex gap-2">
-                <Button variant="outline">Exportar backup</Button>
-                <Button variant="outline">Restaurar backup</Button>
+                <Button variant="outline" onClick={exportarBackup}>
+                  Exportar backup
+                </Button>
+                <Button variant="outline" onClick={() => fileRef.current?.click()}>
+                  Restaurar backup
+                </Button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={restaurarBackup}
+                />
               </div>
+              {backupMsg && <p className="text-sm text-muted-foreground">{backupMsg}</p>}
             </CardContent>
           </Card>
         </TabsContent>

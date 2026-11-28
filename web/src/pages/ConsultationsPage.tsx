@@ -4,10 +4,15 @@ import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { consultas, getPaciente } from '@/lib/mock-data'
+import { getPaciente } from '@/lib/mock-data'
+import { useConsultasStore } from '@/stores/consultasStore'
 import { formatDate } from '@/lib/utils'
 
 export function ConsultationsPage() {
+  const consultas = [...useConsultasStore((s) => s.consultas)].sort((a, b) =>
+    b.fecha.localeCompare(a.fecha),
+  )
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -25,6 +30,7 @@ export function ConsultationsPage() {
 
       <Card>
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
@@ -36,6 +42,13 @@ export function ConsultationsPage() {
               </tr>
             </thead>
             <tbody>
+              {consultas.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                    Sin consultas registradas.
+                  </td>
+                </tr>
+              )}
               {consultas.map((c) => {
                 const paciente = getPaciente(c.pacienteId)
                 return (
@@ -44,7 +57,7 @@ export function ConsultationsPage() {
                     <td className="px-4 py-3">
                       {paciente?.nombres} {paciente?.apellidos}
                     </td>
-                    <td className="px-4 py-3">{c.motivo ?? '—'}</td>
+                    <td className="max-w-xs truncate px-4 py-3">{c.motivo ?? '—'}</td>
                     <td className="px-4 py-3">
                       <Badge variant={c.estado === 'completada' ? 'success' : 'info'}>
                         {c.estado === 'completada' ? 'Completada' : 'En curso'}
@@ -60,6 +73,7 @@ export function ConsultationsPage() {
               })}
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
     </motion.div>

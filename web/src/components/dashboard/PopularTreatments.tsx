@@ -34,7 +34,7 @@ export function PopularTreatments() {
           {popularTreatments.map((t, i) => (
             <div key={t.name} className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: COLORS[i] }} />
+                <span className="h-2 w-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
                 {t.name}
               </div>
               <span className="text-muted-foreground">{t.value} pacientes</span>

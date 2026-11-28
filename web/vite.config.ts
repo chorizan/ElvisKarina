@@ -10,4 +10,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // three.js (vista 3D) ocupa ~1 MB y se carga solo al abrir el odontograma
+    chunkSizeWarningLimit: 1100,
+  },
 })

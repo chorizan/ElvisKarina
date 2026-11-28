@@ -6,14 +6,15 @@ import { DentalMouth3D } from '@/components/odontogram/DentalMouth3D'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { consultas } from '@/lib/mock-data'
+import { useConsultasStore } from '@/stores/consultasStore'
 import { getAffectedTeethSummary, getToothState } from '@/lib/odontogram-utils'
 import { TOOTH_STATES } from '@/lib/tooth-states'
 import { useConsultaStore } from '@/stores/consultaStore'
 
 export function Odontogram3DPage() {
-  const { odontograma } = useConsultaStore()
-  const entries = odontograma.length > 0 ? odontograma : consultas[0].odontograma
+  const { odontograma, consultaId } = useConsultaStore()
+  const consultas = useConsultasStore((s) => s.consultas)
+  const entries = consultaId ? odontograma : (consultas[0]?.odontograma ?? [])
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
   const affected = getAffectedTeethSummary(entries)
   const selectedEntry = selectedTooth
@@ -24,7 +25,7 @@ export function Odontogram3DPage() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/odontograma">
+          <Link to={consultaId ? `/odontograma?consulta=${consultaId}` : '/odontograma'}>
             <ArrowLeft className="h-4 w-4" />
             Volver al odontograma 2D
           </Link>
@@ -37,7 +38,7 @@ export function Odontogram3DPage() {
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1 bg-gradient-to-b from-slate-100 to-slate-200">
           <Canvas
-            shadows
+            shadows="percentage"
             dpr={[1, 2]}
             camera={{ position: [0, 1.35, 3.5], fov: 40 }}
             className="h-full w-full"
